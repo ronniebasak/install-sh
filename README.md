@@ -15,10 +15,10 @@ A comprehensive bash script that transforms a fresh RHEL-based server into a sec
 
 ```bash
 # One-command installation
-curl -sSL https://gist.githubusercontent.com/ronniebasak/1d6bb9c52b5d13d34f7fe4b396b7f202/raw/install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/ronniebasak/install-sh/refs/heads/main/install.sh | sudo bash
 
 # Or download, review, then run
-curl -O https://gist.githubusercontent.com/ronniebasak/1d6bb9c52b5d13d34f7fe4b396b7f202/raw/install.sh
+curl -O https://raw.githubusercontent.com/ronniebasak/install-sh/refs/heads/main/install.sh
 chmod +x install.sh
 sudo ./install.sh
 ```

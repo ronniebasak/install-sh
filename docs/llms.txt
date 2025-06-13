@@ -13,7 +13,7 @@ Key points
 
 ## Quick Start
 
-- [One-liner install](https://gist.githubusercontent.com/ronniebasak/1d6bb9c52b5d13d34f7fe4b396b7f202/raw/install.sh): cURL command & script source  
+- [One-liner install](https://raw.githubusercontent.com/ronniebasak/install-sh/refs/heads/main/install.sh): cURL command & script source  
 - [Installation guide](https://example.com/docs/index.html.md#installation): Requirements & step-by-step  
 - [Post-install checklist](https://example.com/docs/index.html.md#post-install): First login, Portainer & NPM access
 
