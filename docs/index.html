@@ -505,8 +505,12 @@
         const consentError = document.getElementById('consentError');
         const emailMissingWarning = document.getElementById('emailMissingWarning');
 
-        // IMPORTANT: Replace with your Baserow form's Webhook URL
-        const BASEROW_WEBHOOK_URL = 'https://api.baserow.io/api/database/rows/table/YOUR_TABLE_ID/?user_field_names=true';
+        // === START: UPDATED BASEROW CONFIG ===
+        // IMPORTANT: Replace with your actual Baserow Table ID and Database Token.
+        const BASEROW_TABLE_ID = '573036'; // From your API documentation
+        const BASEROW_DATABASE_TOKEN = '6UPuw4GRDHBwkhIAfQMGB08MvISRSxKQ'; // Generate this in your Baserow settings
+        const BASEROW_API_URL = `https://api.baserow.io/api/database/rows/table/${BASEROW_TABLE_ID}/?user_field_names=true`;
+        // === END: UPDATED BASEROW CONFIG ===
 
         updatesCheckbox.addEventListener('change', () => {
             const wantsUpdates = updatesCheckbox.checked;
@@ -543,18 +547,32 @@
                 return;
             }
 
+            if (!BASEROW_DATABASE_TOKEN || BASEROW_DATABASE_TOKEN === 'YOUR_DATABASE_TOKEN') {
+                 feedbackStatus.textContent = 'Configuration error: Baserow database token is not set.';
+                 feedbackStatus.className = 'mt-4 text-sm p-3 rounded-md bg-red-100 text-red-800';
+                 feedbackStatus.classList.remove('hidden');
+                 submitBtn.disabled = false;
+                 submitBtn.innerText = 'Send Feedback';
+                 return;
+            }
+
             const formData = new FormData(feedbackForm);
+            
+            // Map form data to the fields from the new API documentation
             const data = {
-                'Feedback': formData.get('feedback'),
-                'Name': formData.get('name') || 'Anonymous',
-                'Email': formData.get('email'),
-                'Wants Updates': formData.get('updates') === 'on',
+                'Description': formData.get('feedback'),
+                'Name': formData.get('name') || 'Anonymous', // Baserow field "Name"
+                'Email': formData.get('email'), // Baserow field "Email"
+                // The "Wants Updates" field from the form doesn't have a direct equivalent
+                // in the provided table schema. It could be added as a boolean field in Baserow if needed.
             };
 
             try {
-                const response = await fetch(BASEROW_WEBHOOK_URL, {
+                const response = await fetch(BASEROW_API_URL, {
                     method: 'POST',
                     headers: {
+                        // Add the required Authorization header
+                        'Authorization': `Token ${BASEROW_DATABASE_TOKEN}`,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(data),
@@ -567,11 +585,13 @@
                     consentSection.classList.add('hidden');
                     emailMissingWarning.classList.add('hidden');
                 } else {
-                    throw new Error(`Server responded with ${response.status}`);
+                    const errorData = await response.json();
+                    console.error('Baserow API Error:', errorData);
+                    throw new Error(`Server responded with ${response.status}: ${errorData.error || 'Unknown Error'}`);
                 }
             } catch (error) {
                 console.error('Feedback submission error:', error);
-                feedbackStatus.textContent = 'Sorry, there was an error submitting your feedback. Please try again later.';
+                feedbackStatus.textContent = 'Sorry, there was an error submitting your feedback. Please check the console for details.';
                 feedbackStatus.className = 'mt-4 text-sm p-3 rounded-md bg-red-100 text-red-800';
             } finally {
                 feedbackStatus.classList.remove('hidden');
