@@ -489,10 +489,11 @@
             
             // Map form data to your Baserow field names
             const data = {
-                'Description': formData.get('feedback'),
                 'Name': formData.get('name') || 'Anonymous',
+                'Date': new Date().toISOString(), // <-- ADDED: Auto-generates timestamp in ISO format
+                'Description': formData.get('feedback'),
                 'Email': formData.get('email'),
-                'Newsletter Consent': newsletterConsentCheckbox.checked // This will be true or false
+                'Newsletter Consent': newsletterConsentCheckbox.checked
             };
 
             try {
