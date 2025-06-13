@@ -1,0 +1,43 @@
+# install.sh
+
+> A 15-minute Bash script that turns a fresh Rocky / Alma / Fedora VPS into a production-ready, security-hardened Docker host (SSH hardening, firewall, fail2ban, auto-updates, Portainer, Nginx Proxy Manager).
+
+Built for indie devs and lean teams who’d rather pay one $20 server than juggle cloud services.  
+*Re-run safe* (idempotent) and logs everything to `/var/log/install.sh.log`.
+
+Key points  
+- Supports Rocky Linux 9, AlmaLinux 9, Fedora 39+  
+- Interactive prompts: SSH port, timezone, Portainer choice, reboot  
+- Helper: `/usr/local/bin/add_secure_user` creates sudo + docker users  
+- Full source is <200 lines, MIT-licensed
+
+## Quick Start
+
+- [One-liner install](https://gist.githubusercontent.com/ronniebasak/1d6bb9c52b5d13d34f7fe4b396b7f202/raw/install.sh): cURL command & script source  
+- [Installation guide](https://example.com/docs/index.html.md#installation): Requirements & step-by-step  
+- [Post-install checklist](https://example.com/docs/index.html.md#post-install): First login, Portainer & NPM access
+
+## Operations
+
+- [User management](https://example.com/docs/index.html.md#user-management): add/remove secure users  
+- [Firewall commands](https://example.com/docs/index.html.md#firewall-management): open/close ports with `firewall-cmd`  
+- [Container management](https://example.com/docs/index.html.md#container-management): Docker CLI & Portainer basics  
+- [SSL with Nginx Proxy Manager](https://example.com/docs/index.html.md#ssl-management): automatic Let’s Encrypt certs
+
+## Scenarios
+
+- [Deploy a web app](https://example.com/docs/index.html.md#scenarios): compose-file example & proxy host setup  
+- [Set up PostgreSQL](https://example.com/docs/index.html.md#scenarios): secure container + volume backup  
+- [Add team members](https://example.com/docs/index.html.md#scenarios): Portainer RBAC & secure SSH
+
+## Troubleshooting & Maintenance
+
+- [SSH issues](https://example.com/docs/index.html.md#troubleshooting): custom port, key errors  
+- [Container failures](https://example.com/docs/index.html.md#troubleshooting): logs & `docker stats`  
+- [Weekly / monthly tasks](https://example.com/docs/index.html.md#maintenance): updates, disk cleanup
+
+## Optional
+
+- [llms-full.txt](https://example.com/llms-full.txt): Entire docs (~30 kB) for extended context  
+- [Changelog](https://github.com/ronniebasak/install.sh/blob/main/CHANGELOG.md): Release history  
+- [Community Q&A thread](https://x.com/HiSohan): Tips and feedback

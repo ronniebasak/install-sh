@@ -5,954 +5,425 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Server Setup Script - Documentation</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        .code-container {
-            position: relative;
-            margin-bottom: 1rem;
+        body { 
+            font-family: 'Inter', sans-serif; 
+            scroll-behavior: smooth; 
+            background-color: #f8fafc; /* Lighter gray background */
         }
-        .code-block {
-            background: #1f2937;
-            color: #10b981;
-            padding: 1rem;
-            padding-right: 3rem;
-            border-radius: 0.5rem;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
-            overflow-x: auto;
+        .prose {
+            --tw-prose-body: #334155; /* Darker gray for body text */
+            --tw-prose-headings: #0f172a;
+            --tw-prose-lead: #475569;
+            --tw-prose-links: #2563eb;
+            --tw-prose-bold: #1e293b;
+            --tw-prose-bullets: #3b82f6;
+        }
+        .code-block { 
+            background: #1e293b; /* Slightly softer dark blue */
+            font-family: 'Source Code Pro', monospace; 
             white-space: pre-wrap;
-            line-height: 1.8;
+            border-radius: 0.5rem;
+            padding: 1.25rem 1.5rem;
             position: relative;
         }
-        .code-line {
-            position: relative;
-            display: block;
-            padding: 0.125rem 0;
-            cursor: pointer;
-            transition: background-color 0.2s;
+        .code-container { position: relative; }
+        .copy-btn { 
+            position: absolute; 
+            top: 0.75rem; 
+            right: 0.75rem; 
+            background: #334155; 
+            border: 1px solid #475569;
+            border-radius: 0.375rem; 
+            padding: 0.25rem 0.5rem; 
+            cursor: pointer; 
+            color: #cbd5e1; 
+            font-size: 0.75rem; 
+            opacity: 0; 
+            transition: all 0.2s ease-in-out; 
+            transform: translateY(-5px);
         }
-        .code-line:hover {
-            background-color: rgba(16, 185, 129, 0.1);
-            border-radius: 0.25rem;
-        }
-        .copy-line-btn {
-            position: absolute;
-            right: 0.5rem;
-            top: 50%;
-            transform: translateY(-50%);
-            opacity: 0;
-            transition: opacity 0.2s;
-            background: #374151;
-            border: none;
-            border-radius: 0.25rem;
-            padding: 0.25rem;
-            cursor: pointer;
-            color: #9ca3af;
-            font-size: 0.75rem;
-        }
-        .code-line:hover .copy-line-btn {
-            opacity: 1;
-        }
-        .copy-line-btn:hover {
-            background: #4b5563;
-            color: #10b981;
-        }
-        .copy-block-btn {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            background: #374151;
-            border: none;
-            border-radius: 0.25rem;
-            padding: 0.5rem;
-            cursor: pointer;
-            color: #9ca3af;
-            font-size: 0.75rem;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .code-container:hover .copy-block-btn {
-            opacity: 1;
-        }
-        .copy-block-btn:hover {
-            background: #4b5563;
-            color: #10b981;
-        }
-        .copy-feedback {
-            position: absolute;
-            top: -2rem;
-            right: 0;
-            background: #059669;
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.75rem;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-        }
-        .copy-feedback.show {
-            opacity: 1;
-        }
-        .nav-link {
-            transition: all 0.2s;
-        }
-        .nav-link:hover {
-            background-color: #f3f4f6;
-            border-radius: 0.375rem;
+        .code-container:hover .copy-btn { opacity: 1; transform: translateY(0); }
+        .copy-btn:hover { background: #475569; color: #ffffff; }
+        .copy-feedback { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #059669; color: white; padding: 0.75rem 1.25rem; border-radius: 0.5rem; font-size: 0.875rem; opacity: 0; transition: opacity 0.3s, transform 0.3s; transform: translateY(20px); pointer-events: none; z-index: 100; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+        .copy-feedback.show { opacity: 1; transform: translateY(0); }
+        .nav-link.active { background-color: #dbeafe; color: #1d4ed8; font-weight: 600; }
+        .nav-link { transition: all 0.15s ease-in-out; }
+        .prose h1 { font-weight: 800; letter-spacing: -0.025em; }
+        .prose h2 { font-weight: 700; margin-top: 3em; margin-bottom: 1.5em; padding-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; }
+        .prose h3 { font-weight: 600; margin-top: 2.5em; margin-bottom: 1em; }
+        .mermaid svg { margin: auto; } /* Center mermaid diagrams */
+        .flow-arrow {
+            flex-grow: 1;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            min-height: 40px;
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-100 text-gray-800">
+    <div id="copy-feedback-container" class="copy-feedback">Copied to clipboard!</div>
+
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
+    <nav class="bg-white/80 backdrop-blur-md shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-3">
                 <div class="flex items-center gap-2">
-                    <div class="text-2xl font-bold text-blue-600 font-mono">install.sh</div>
-                    <span class="text-gray-600">Documentation</span>
+                    <div class="text-2xl font-bold text-blue-600 font-mono"><a href="./index.html">install.sh</a></div>
+                    <span class="hidden sm:inline-block text-gray-500 mt-0.5">/</span>
+                    <span class="hidden sm:inline-block text-gray-500 mt-0.5">Documentation</span>
                 </div>
-                <div class="hidden md:flex items-center gap-6 text-sm">
-                    <a href="#overview" class="nav-link px-3 py-2 text-gray-700 hover:text-blue-600">Overview</a>
-                    <a href="#post-install" class="nav-link px-3 py-2 text-gray-700 hover:text-blue-600">Post-Install</a>
-                    <a href="#operations" class="nav-link px-3 py-2 text-gray-700 hover:text-blue-600">Operations</a>
-                    <a href="#scenarios" class="nav-link px-3 py-2 text-gray-700 hover:text-blue-600">Scenarios</a>
-                    <a href="#troubleshooting" class="nav-link px-3 py-2 text-gray-700 hover:text-blue-600">Troubleshooting</a>
+                <div class="hidden md:flex items-center gap-2 text-sm">
+                    <a href="#overview" class="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-md">Overview</a>
+                    <a href="#operations" class="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-md">Operations</a>
+                    <a href="#scenarios" class="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-md">Scenarios</a>
+                    <a href="#troubleshooting" class="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-md">Troubleshooting</a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="flex gap-8">
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
+        <div class="lg:flex lg:gap-10">
             <!-- Sidebar -->
-            <aside class="hidden lg:block w-64 flex-shrink-0">
+            <aside class="hidden lg:block w-60 flex-shrink-0">
                 <div class="sticky top-24">
-                    <nav class="space-y-1">
-                        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Contents</div>
-                        <a href="#overview" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">Overview</a>
-                        <a href="#installation" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">Installation</a>
-                        <a href="#post-install" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">Post-Installation</a>
-                        
-                        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 mt-6">Operations</div>
-                        <a href="#user-management" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">User Management</a>
-                        <a href="#firewall-management" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">Firewall Management</a>
-                        <a href="#container-management" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">Container Management</a>
-                        <a href="#ssl-management" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">SSL Management</a>
-                        
-                        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 mt-6">Scenarios</div>
-                        <a href="#scenarios" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">Common Scenarios</a>
-                        <a href="#troubleshooting" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">Troubleshooting</a>
-                        <a href="#maintenance" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">Maintenance</a>
+                    <nav id="sidebar-nav" class="space-y-2">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Getting Started</p>
+                            <a href="#overview" class="nav-link block px-3 py-2 text-sm text-gray-600 hover:bg-gray-200/60 rounded-md">Overview</a>
+                            <a href="#installation" class="nav-link block px-3 py-2 text-sm text-gray-600 hover:bg-gray-200/60 rounded-md">Installation Flow</a>
+                            <a href="#post-install" class="nav-link block px-3 py-2 text-sm text-gray-600 hover:bg-gray-200/60 rounded-md">Post-Installation</a>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider pt-4 mb-3">Operations</p>
+                            <a href="#user-management" class="nav-link block px-3 py-2 text-sm text-gray-600 hover:bg-gray-200/60 rounded-md">User Management</a>
+                            <a href="#firewall-management" class="nav-link block px-3 py-2 text-sm text-gray-600 hover:bg-gray-200/60 rounded-md">Firewall</a>
+                            <a href="#container-management" class="nav-link block px-3 py-2 text-sm text-gray-600 hover:bg-gray-200/60 rounded-md">Containers</a>
+                            <a href="#ssl-management" class="nav-link block px-3 py-2 text-sm text-gray-600 hover:bg-gray-200/60 rounded-md">SSL</a>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider pt-4 mb-3">Guides</p>
+                            <a href="#scenarios" class="nav-link block px-3 py-2 text-sm text-gray-600 hover:bg-gray-200/60 rounded-md">Common Scenarios</a>
+                            <a href="#troubleshooting" class="nav-link block px-3 py-2 text-sm text-gray-600 hover:bg-gray-200/60 rounded-md">Troubleshooting</a>
+                            <a href="#maintenance" class="nav-link block px-3 py-2 text-sm text-gray-600 hover:bg-gray-200/60 rounded-md">Maintenance</a>
+                        </div>
                     </nav>
                 </div>
             </aside>
 
             <!-- Main Content -->
-            <main class="flex-1 max-w-4xl">
-                <!-- Overview -->
-                <section id="overview" class="mb-12">
-                    <h1 class="text-4xl font-bold text-gray-900 mb-6">Server Setup Script Documentation</h1>
+            <main class="flex-1 min-w-0 bg-white p-8 sm:p-12 rounded-2xl border border-gray-200/80 shadow-sm">
+                <div class="prose max-w-none prose-blue">
+                
+                    <!-- Overview -->
+                    <section id="overview">
+                        <h1>Server Setup Script Documentation</h1>
+                        <p class="lead">A comprehensive bash script that transforms a fresh RHEL-based server into a secure, Docker-ready production environment with SSL automation, intrusion detection, and enterprise-grade security configurations.</p>
+                    </section>
                     
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-                        <h2 class="text-xl font-semibold text-blue-900 mb-3">What This Script Provides</h2>
-                        <p class="text-blue-800 mb-4">
-                            A complete, security-hardened server foundation that takes 15 minutes to install and provides enterprise-grade infrastructure on any budget.
+                    <!-- NEW: Installation Flow -->
+                    <section id="installation">
+                        <h2 class="text-3xl font-extrabold !mb-6 !mt-8 text-center tracking-tight">Installation at a Glance</h2>
+                        <p class="text-center max-w-3xl mx-auto text-lg text-gray-600 mb-12">
+                            Run one command on a fresh server. The script handles the complex setup, asking you for key decisions along the way.
                         </p>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div>
-                                <h3 class="font-semibold text-blue-900 mb-2">Security Layer</h3>
-                                <ul class="text-sm text-blue-800 space-y-1">
-                                    <li>• SSH hardening (custom port, key-only auth)</li>
-                                    <li>• Firewall with fail2ban intrusion detection</li>
-                                    <li>• SELinux in enforcing mode</li>
-                                    <li>• Malware scanning (ClamAV + RKHunter)</li>
-                                    <li>• Automatic security updates</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-blue-900 mb-2">Application Layer</h3>
-                                <ul class="text-sm text-blue-800 space-y-1">
-                                    <li>• Docker environment ready to use</li>
-                                    <li>• Portainer web UI for container management</li>
-                                    <li>• Nginx Proxy Manager for SSL automation</li>
-                                    <li>• Pre-configured networking (npm network)</li>
-                                    <li>• Log rotation and resource limits</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8">
-                        <p class="text-amber-800 flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 18.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-                            <strong>Important:</strong> This is infrastructure setup, not application deployment. You still need to deploy your applications using Docker, Portainer, or other tools.
-                        </p>
-                    </div>
-                </section>
-
-                <!-- Installation -->
-                <section id="installation" class="mb-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Installation</h2>
-                    
-                    <div class="space-y-6">
-                        <div>
-                            <h3 class="text-xl font-semibold text-gray-800 mb-3">Requirements</h3>
-                            <ul class="text-gray-700 space-y-2">
-                                <li class="flex items-center gap-2">
-                                    <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                    Fresh RHEL-based server (Rocky Linux 9, AlmaLinux 9, Fedora 39+)
-                                </li>
-                                <li class="flex items-center gap-2">
-                                    <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                    Minimum 2GB RAM, 25GB SSD
-                                </li>
-                                <li class="flex items-center gap-2">
-                                    <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                    Root access via SSH
-                                </li>
-                                <li class="flex items-center gap-2">
-                                    <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                    Internet connection for package downloads
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h3 class="text-xl font-semibold text-gray-800 mb-3">Run the Script</h3>
-                            <div class="code-container">
-                                <div class="code-block">
-<span class="code-line"># Download and run (one command)<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">curl -sSL https://gist.githubusercontent.com/ronniebasak/1d6bb9c52b5d13d34f7fe4b396b7f202/raw/install.sh | sudo bash<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-
-<span class="code-line"># Or download first, review, then run<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">curl -O https://gist.githubusercontent.com/ronniebasak/1d6bb9c52b5d13d34f7fe4b396b7f202/raw/install.sh<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">chmod +x install.sh<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo ./install.sh<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
+                        
+                        <!-- Visual Flow -->
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0 my-10 not-prose">
+                            <!-- Step 1: Start -->
+                            <div class="text-center w-48">
+                                <div class="bg-blue-100 border-2 border-blue-300 shadow-md rounded-xl p-4">
+                                    <h3 class="font-bold text-blue-800">1. Run Script</h3>
+                                    <p class="text-xs text-blue-700 mt-1">Pipe `curl` to `bash` on a fresh server.</p>
                                 </div>
-                                <button class="copy-block-btn" onclick="copyBlock(this)">📋 Copy All</button>
-                                <div class="copy-feedback">Copied!</div>
                             </div>
-                        </div>
 
-                        <div>
-                            <h3 class="text-xl font-semibold text-gray-800 mb-3">Interactive Prompts</h3>
-                            <div class="bg-gray-50 border rounded-lg p-4">
-                                <ul class="space-y-3 text-sm text-gray-700">
-                                    <li><strong>SSH Port:</strong> Choose custom port (default: 2222)</li>
-                                    <li><strong>Portainer:</strong> Install Portainer, Agent, or skip</li>
-                                    <li><strong>Timezone:</strong> Set system timezone (default: UTC)</li>
-                                    <li><strong>Reboot:</strong> Reboot after completion (recommended)</li>
-                                </ul>
+                            <div class="flow-arrow rotate-90 md:rotate-0"></div>
+
+                            <!-- Step 2: Secure -->
+                            <div class="text-center w-48">
+                                <div class="bg-green-100 border-2 border-green-300 shadow-md rounded-xl p-4">
+                                    <h3 class="font-bold text-green-800">2. Harden Base</h3>
+                                    <p class="text-xs text-green-700 mt-1">Updates, SSH hardening, Firewall & Fail2ban setup.</p>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Post-Installation -->
-                <section id="post-install" class="mb-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Post-Installation Setup</h2>
-                    
-                    <div class="space-y-8">
-                        <div>
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">First Steps After Installation</h3>
                             
-                            <div class="space-y-4">
-                                <div class="bg-white border rounded-lg p-4">
-                                    <h4 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                                        <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span>
-                                        Access Portainer (if installed)
-                                    </h4>
-                                    <p class="text-sm text-gray-600 mb-2">Navigate to https://your-server-ip:9443</p>
-                                    <ul class="text-sm text-gray-700 space-y-1">
-                                        <li>• Create admin account (username/password)</li>
-                                        <li>• Select "Docker" environment</li>
-                                        <li>• Connect to local Docker socket</li>
-                                    </ul>
-                                </div>
+                            <div class="flow-arrow rotate-90 md:rotate-0"></div>
 
-                                <div class="bg-white border rounded-lg p-4">
-                                    <h4 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                                        <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">2</span>
-                                        Access Nginx Proxy Manager
-                                    </h4>
-                                    <p class="text-sm text-gray-600 mb-2">Navigate to http://your-server-ip:81</p>
-                                    <ul class="text-sm text-gray-700 space-y-1">
-                                        <li>• Default login: admin@example.com / changeme</li>
-                                        <li>• Change password immediately</li>
-                                        <li>• Set up your first SSL certificate</li>
-                                    </ul>
+                            <!-- Step 3: Deploy -->
+                            <div class="text-center w-48">
+                                <div class="bg-purple-100 border-2 border-purple-300 shadow-md rounded-xl p-4">
+                                    <h3 class="font-bold text-purple-800">3. Install Services</h3>
+                                    <p class="text-xs text-purple-700 mt-1">Docker, Portainer, and Nginx Proxy Manager.</p>
                                 </div>
-
-                                <div class="bg-white border rounded-lg p-4">
-                                    <h4 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                                        <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span>
-                                        Create Your First User
-                                    </h4>
-                                    <div class="code-container">
-                                        <div class="code-block">
-<span class="code-line">sudo /usr/local/bin/add_secure_user<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-                                        </div>
-                                        <button class="copy-block-btn" onclick="copyBlock(this)">📋</button>
-                                        <div class="copy-feedback">Copied!</div>
-                                    </div>
-                                    <p class="text-sm text-gray-700 mt-2">Creates a user with wheel+docker access and SSH key auth only</p>
+                            </div>
+                            
+                             <div class="flow-arrow rotate-90 md:rotate-0"></div>
+                            
+                            <!-- Step 4: Finish -->
+                            <div class="text-center w-48">
+                                <div class="bg-gray-100 border-2 border-gray-300 shadow-md rounded-xl p-4">
+                                    <h3 class="font-bold text-gray-800">4. Finalize</h3>
+                                    <p class="text-xs text-gray-700 mt-1">Set timezone, configure user, and reboot.</p>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </section>
 
-                <!-- Operations -->
-                <section id="operations" class="mb-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Common Operations</h2>
-
-                    <!-- User Management -->
-                    <div id="user-management" class="mb-8">
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">User Management</h3>
+                        <!-- Command -->
+                        <div class="code-container my-12">
+                            <pre class="code-block"><code class="text-gray-300">curl -sSL https://gist.githubusercontent.com/ronniebasak/1d6bb9c52b5d13d34f7fe4b396b7f202/raw/install.sh | sudo bash</code></pre>
+                            <button class="copy-btn">Copy</button>
+                        </div>
                         
-                        <div class="space-y-4">
-                            <div class="bg-white border rounded-lg p-4">
-                                <h4 class="font-semibold text-gray-800 mb-3">Add New User with SSH Key Auth</h4>
-                                <div class="code-container">
-                                    <div class="code-block">
-<span class="code-line"># Use the provided script (recommended)<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo /usr/local/bin/add_secure_user<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
+                        <h3>Requirements</h3>
+                        <ul>
+                            <li><strong>OS:</strong> Fresh Rocky Linux 9, AlmaLinux 9, or Fedora 39+</li>
+                            <li><strong>RAM:</strong> 2GB Minimum (4GB Recommended)</li>
+                            <li><strong>Access:</strong> Root access via SSH</li>
+                        </ul>
+                    </section>
+                    
+                    <section id="architecture">
+                        <h2>Architecture Overview</h2>
+                        <p>The script establishes a layered security and application architecture. Traffic is filtered through a hardened firewall before reaching the reverse proxy, which then intelligently routes requests to the appropriate Docker containers.</p>
+                        <div class="my-8 mermaid">
+                            graph LR
+                                subgraph "Internet"
+                                    U[Users]
+                                end
+                                
+                                subgraph "Server Edge"
+                                    F[Firewall<br/>Allows 80, 443, 2222]
+                                    FB[Fail2ban<br/>Blocks Malicious IPs]
+                                    SSH[SSH Daemon<br/>Port 2222, Key Auth]
+                                end
+                                
+                                subgraph "Container Network (npm)"
+                                    NPM[Nginx Proxy Manager<br/>SSL & Routing]
+                                    P[Portainer<br/>Container Mgmt]
+                                    D1[App 1]
+                                    D2[App 2]
+                                    DB[Database]
+                                end
+                                
+                                U -- HTTPS/443 --> F --> NPM
+                                U -- SSH/2222 --> F --> SSH
+                                NPM -- Routes traffic --> D1
+                                NPM -- Routes traffic --> D2
+                                P -- Manages --> D1
+                                P -- Manages --> D2
+                                P -- Manages --> DB
+                                D1 -- Connects to --> DB
+                                D2 -- Connects to --> DB
+                                FB -- Watches logs & updates --> F
+                        </div>
+                    </section>
 
-<span class="code-line"># Manual method<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo useradd -m -G wheel,docker username<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo passwd username<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo mkdir -p /home/username/.ssh<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo chmod 700 /home/username/.ssh<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-
-<span class="code-line"># Add SSH key<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">echo "ssh-rsa AAAAB3..." | sudo tee /home/username/.ssh/authorized_keys<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo chmod 600 /home/username/.ssh/authorized_keys<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo chown -R username:username /home/username/.ssh<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-                                    </div>
-                                    <button class="copy-block-btn" onclick="copyBlock(this)">📋 Copy All</button>
-                                    <div class="copy-feedback">Copied!</div>
+                    <!-- Post-Installation -->
+                    <section id="post-install">
+                        <h2>Post-Installation Setup</h2>
+                        <p>After the script finishes and the server reboots, complete these initial setup steps to access your new environment.</p>
+                        
+                        <div class="space-y-4 mt-8 not-prose">
+                            <div class="bg-white border-2 border-gray-200/80 rounded-xl p-5">
+                                <h4 class="font-semibold text-gray-800 mb-2 flex items-center gap-3"><span class="bg-blue-100 text-blue-700 rounded-full w-7 h-7 flex items-center justify-center font-bold text-sm">1</span> Access Portainer</h4>
+                                <p class="text-sm text-gray-600 pl-10">Login at <code>https://your-server-ip:9443</code> to manage your Docker environment.</p>
+                            </div>
+                            <div class="bg-white border-2 border-gray-200/80 rounded-xl p-5">
+                                <h4 class="font-semibold text-gray-800 mb-2 flex items-center gap-3"><span class="bg-blue-100 text-blue-700 rounded-full w-7 h-7 flex items-center justify-center font-bold text-sm">2</span> Configure Nginx Proxy Manager</h4>
+                                <p class="text-sm text-gray-600 pl-10">Login at <code>http://your-server-ip:81</code>. Default login: <code>admin@example.com</code> / <code>changeme</code>. <strong class="text-red-600">Change the password immediately.</strong></p>
+                            </div>
+                            <div class="bg-white border-2 border-gray-200/80 rounded-xl p-5">
+                                <h4 class="font-semibold text-gray-800 mb-2 flex items-center gap-3"><span class="bg-blue-100 text-blue-700 rounded-full w-7 h-7 flex items-center justify-center font-bold text-sm">3</span> Create Your First Sudo User</h4>
+                                <p class="text-sm text-gray-600 pl-10 mb-4">The script includes a helper to create a new user with sudo/docker access and configure SSH key authentication.</p>
+                                <div class="code-container ml-10">
+                                    <pre class="code-block"><code class="text-gray-300">sudo /usr/local/bin/add_secure_user</code></pre>
+                                    <button class="copy-btn">Copy</button>
                                 </div>
-                            </div>
-
-                            <div class="bg-white border rounded-lg p-4">
-                                <h4 class="font-semibold text-gray-800 mb-3">Remove User</h4>
-                                <div class="code-block"># Remove user and home directory
-sudo userdel -r username
-
-# Remove SSH config entries (if added via script)
-sudo sed -i '/^Match User username$/,/^$/d' /etc/ssh/sshd_config
-sudo systemctl restart sshd</div>
-                            </div>
-
-                            <div class="bg-white border rounded-lg p-4">
-                                <h4 class="font-semibold text-gray-800 mb-3">List Users with Docker Access</h4>
-                                <div class="code-block"># Users in docker group
-getent group docker
-
-# Users in wheel group (sudo access)
-getent group wheel</div>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <!-- Firewall Management -->
-                    <div id="firewall-management" class="mb-8">
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">Firewall Management</h3>
-                        
-                        <div class="space-y-4">
-                            <div class="bg-white border rounded-lg p-4">
-                                <h4 class="font-semibold text-gray-800 mb-3">Open Ports</h4>
-                                <div class="code-container">
-                                    <div class="code-block">
-<span class="code-line"># Open specific port<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo firewall-cmd --permanent --add-port=8080/tcp<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo firewall-cmd --reload<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
+                    <!-- Operations -->
+                    <section id="operations">
+                        <h2>Common Operations</h2>
+                        <div id="user-management">
+                            <h3>User Management</h3>
+                            <p>Use the provided script to add new users securely. It handles creating the user, adding them to the correct groups, and setting up SSH key authentication.</p>
+                            <div class="code-container">
+                                <pre class="code-block"><code class="text-gray-300"># Add a new user with sudo/docker access
+sudo /usr/local/bin/add_secure_user
 
-<span class="code-line"># Open port range<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo firewall-cmd --permanent --add-port=8000-8010/tcp<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo firewall-cmd --reload<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-
-<span class="code-line"># Open common services<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo firewall-cmd --permanent --add-service=mysql<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo firewall-cmd --permanent --add-service=postgresql<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo firewall-cmd --reload<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-                                    </div>
-                                    <button class="copy-block-btn" onclick="copyBlock(this)">📋 Copy All</button>
-                                    <div class="copy-feedback">Copied!</div>
-                                </div>
+# List users in the docker group
+getent group docker</code></pre>
+                                <button class="copy-btn">Copy</button>
                             </div>
-
-                            <div class="bg-white border rounded-lg p-4">
-                                <h4 class="font-semibold text-gray-800 mb-3">Close Ports</h4>
-                                <div class="code-block"># Close specific port
-sudo firewall-cmd --permanent --remove-port=8080/tcp
+                        </div>
+                        <div id="firewall-management">
+                            <h3>Firewall Management</h3>
+                            <p>The firewall is managed by <code>firewalld</code>. The script opens the required ports (80 for HTTP validation, 443 for HTTPS, and your custom SSH port). To open additional ports:</p>
+                             <div class="code-container">
+                                <pre class="code-block"><code class="text-gray-300"># Open a new port (e.g., for a game server)
+sudo firewall-cmd --permanent --add-port=8080/tcp
 sudo firewall-cmd --reload
 
-# Close service
-sudo firewall-cmd --permanent --remove-service=mysql
-sudo firewall-cmd --reload</div>
-                            </div>
-
-                            <div class="bg-white border rounded-lg p-4">
-                                <h4 class="font-semibold text-gray-800 mb-3">Check Firewall Status</h4>
-                                <div class="code-block"># Current configuration
-sudo firewall-cmd --list-all
-
-# Open ports
-sudo firewall-cmd --list-ports
-
-# Active services
-sudo firewall-cmd --list-services
-
-# Check if port is open
-sudo firewall-cmd --query-port=8080/tcp</div>
-                            </div>
-
-                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                                <p class="text-yellow-800 text-sm">
-                                    <strong>Warning:</strong> Always use <code>--permanent</code> flag and <code>--reload</code> to make changes persistent across reboots.
-                                </p>
+# View all open ports and services
+sudo firewall-cmd --list-all</code></pre>
+                                <button class="copy-btn">Copy</button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Container Management -->
-                    <div id="container-management" class="mb-8">
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">Container Management</h3>
-                        
-                        <div class="space-y-4">
-                            <div class="bg-white border rounded-lg p-4">
-                                <h4 class="font-semibold text-gray-800 mb-3">Using Portainer (Recommended)</h4>
-                                <ul class="text-sm text-gray-700 space-y-2">
-                                    <li>• Access: https://your-server-ip:9443</li>
-                                    <li>• Go to "App Templates" for one-click deployments</li>
-                                    <li>• Use "Stacks" to deploy Docker Compose files</li>
-                                    <li>• Connect containers to "npm" network for SSL automation</li>
-                                </ul>
-                            </div>
-
-                            <div class="bg-white border rounded-lg p-4">
-                                <h4 class="font-semibold text-gray-800 mb-3">Docker CLI Commands</h4>
-                                <div class="code-block mb-2">
-# List running containers
+                        <div id="container-management">
+                            <h3>Container Management</h3>
+                             <p>Using the Portainer web UI is recommended for most operations. For quick command-line tasks, these commands are useful:</p>
+                             <div class="code-container">
+                                <pre class="code-block"><code class="text-gray-300"># List running containers
 docker ps
 
-# List all containers
-docker ps -a
+# Check logs of a specific container
+docker logs [container_name]
 
-# View logs
-docker logs container-name
-
-# Access container shell
-docker exec -it container-name bash
-
-# Stop/start containers
-docker stop container-name
-docker start container-name
-
-# Remove containers
-docker rm container-name</div>
-                            </div>
-
-                            <div class="bg-white border rounded-lg p-4">
-                                <h4 class="font-semibold text-gray-800 mb-3">Network Management</h4>
-                                <div class="code-block mb-2">
-# List networks
-docker network ls
-
-# Inspect npm network
-docker network inspect npm
-
-# Connect container to npm network
-docker network connect npm container-name
-
-# Deploy with npm network
-docker run -d --name myapp --network npm nginx</div>
+# Connect an existing container to the proxy network
+docker network connect npm [container_name]</code></pre>
+                                <button class="copy-btn">Copy</button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- SSL Management -->
-                    <div id="ssl-management" class="mb-8">
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">SSL Certificate Management</h3>
-                        
-                        <div class="space-y-4">
-                            <div class="bg-white border rounded-lg p-4">
-                                <h4 class="font-semibold text-gray-800 mb-3">Using Nginx Proxy Manager (Recommended)</h4>
-                                <ol class="text-sm text-gray-700 space-y-2">
-                                    <li>1. Access: http://your-server-ip:81</li>
-                                    <li>2. Go to "SSL Certificates" → "Add SSL Certificate"</li>
-                                    <li>3. Choose "Let's Encrypt" for free certificates</li>
-                                    <li>4. Enter domain name and email</li>
-                                    <li>5. Enable "Use a DNS Challenge" for wildcard certs</li>
-                                    <li>6. Certificates auto-renew every 90 days</li>
-                                </ol>
-                            </div>
-
-                            <div class="bg-white border rounded-lg p-4">
-                                <h4 class="font-semibold text-gray-800 mb-3">Add Domain with SSL</h4>
-                                <ol class="text-sm text-gray-700 space-y-2">
-                                    <li>1. In Nginx Proxy Manager: "Proxy Hosts" → "Add Proxy Host"</li>
-                                    <li>2. Domain: example.com</li>
-                                    <li>3. Forward to: container-name (if on npm network) or IP:port</li>
-                                    <li>4. Go to "SSL" tab → Select certificate or create new</li>
-                                    <li>5. Enable "Force SSL" and "HTTP/2 Support"</li>
-                                </ol>
-                            </div>
-
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <p class="text-blue-800 text-sm">
-                                    <strong>Pro Tip:</strong> Point your domain's A record to your server IP first, then set up the proxy host in Nginx Proxy Manager. This ensures SSL validation works properly.
-                                </p>
-                            </div>
+                         <div id="ssl-management">
+                            <h3>SSL Management</h3>
+                             <p>Nginx Proxy Manager handles all SSL certificate tasks. Point your domain's A record to the server IP, then add a "Proxy Host" in the Nginx Proxy Manager web UI. SSL certificates will be requested and renewed automatically via Let's Encrypt.</p>
                         </div>
-                    </div>
-                </section>
+                    </section>
 
-                <!-- Common Scenarios -->
-                <section id="scenarios" class="mb-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Common Scenarios</h2>
-                    
-                    <div class="space-y-6">
-                        <div class="bg-white border rounded-lg p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Deploying a Web Application</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <h4 class="font-semibold text-gray-700 mb-2">1. Using Portainer (GUI Method)</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1 ml-4">
-                                        <li>• Go to Portainer → Stacks → Add Stack</li>
-                                        <li>• Paste your docker-compose.yml</li>
-                                        <li>• Ensure services use the "npm" network</li>
-                                        <li>• Deploy and note the container names</li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-700 mb-2">2. Set up Domain and SSL</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1 ml-4">
-                                        <li>• Point domain A record to server IP</li>
-                                        <li>• In Nginx Proxy Manager: add proxy host</li>
-                                        <li>• Forward to container name or localhost:port</li>
-                                        <li>• Create/select SSL certificate</li>
-                                    </ul>
-                                </div>
-                                <div class="code-block">
-# Example docker-compose.yml
-version: '3'
+                    <!-- Scenarios -->
+                    <section id="scenarios">
+                        <h2>Common Scenarios</h2>
+                        <h3>Deploying a Ghost Blog</h3>
+                        <p>This example demonstrates deploying a containerized application and exposing it securely with an SSL certificate.</p>
+                        <ol>
+                            <li>In Portainer, go to "Stacks" &gt; "Add Stack".</li>
+                            <li>Give it a name (e.g., `ghost-blog`).</li>
+                            <li>Paste the following Docker Compose content into the web editor.</li>
+                            <li>Deploy the stack.</li>
+                            <li>In Nginx Proxy Manager, create a proxy host for `blog.yourdomain.com` that forwards to the hostname `ghost` on port `2368`.</li>
+                            <li>On the SSL tab for that host, request a new Let's Encrypt certificate.</li>
+                        </ol>
+                        <div class="code-container">
+                            <pre class="code-block"><code class="text-gray-300">version: '3.8'
 services:
-  webapp:
-    image: myapp:latest
+  ghost:
+    image: ghost:latest
+    restart: always
     networks:
       - npm
     environment:
-      - DATABASE_URL=postgresql://...
-      
+      # This MUST match the domain you set up in Nginx Proxy Manager
+      url: https://blog.yourdomain.com
+    volumes:
+      - ghost_content:/var/lib/ghost/content
+
+volumes:
+  ghost_content:
+
 networks:
   npm:
-    external: true</div>
-                            </div>
+    external: true</code></pre>
+                            <button class="copy-btn">Copy</button>
                         </div>
-
-                        <div class="bg-white border rounded-lg p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Setting up a Database</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <h4 class="font-semibold text-gray-700 mb-2">PostgreSQL Example</h4>
-                                    <div class="code-block mb-2">
-# Using Portainer App Templates or manual deployment
-docker run -d \
-  --name postgres \
-  --network npm \
-  -e POSTGRES_PASSWORD=secure_password \
-  -e POSTGRES_DB=myapp \
-  -v postgres_data:/var/lib/postgresql/data \
-  postgres:15
-
-# Open firewall for external access (if needed)
-sudo firewall-cmd --permanent --add-port=5432/tcp
-sudo firewall-cmd --reload</div>
-                                </div>
-                                <div class="bg-amber-50 border border-amber-200 rounded p-3">
-                                    <p class="text-amber-800 text-sm">
-                                        <strong>Security Note:</strong> For production, don't expose database ports externally. Use application containers on the same network instead.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white border rounded-lg p-6">
-                            <h3 class="text-xl font-semibent text-gray-800 mb-4">Adding Team Members</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <h4 class="font-semibold text-gray-700 mb-2">Developer Access</h4>
-                                    <div class="code-block mb-2">
-# Add user with Docker and sudo access
-sudo /usr/local/bin/add_secure_user
-
-# Or manually:
-sudo useradd -m -G wheel,docker jane
-# (Then follow SSH key setup)</div>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-700 mb-2">Portainer Access</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1 ml-4">
-                                        <li>• Go to Portainer → Users → Add User</li>
-                                        <li>• Set username/password</li>
-                                        <li>• Assign to appropriate team</li>
-                                        <li>• Grant access to specific containers/stacks</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white border rounded-lg p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Backup Strategy</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <h4 class="font-semibold text-gray-700 mb-2">Docker Volumes</h4>
-                                    <div class="code-block mb-2">
-# List volumes
-docker volume ls
-
-# Backup volume
-docker run --rm -v volume_name:/source -v $(pwd):/backup alpine \
-  tar czf /backup/backup.tar.gz -C /source .
-
-# Restore volume
-docker run --rm -v volume_name:/target -v $(pwd):/backup alpine \
-  tar xzf /backup/backup.tar.gz -C /target</div>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-700 mb-2">Database Backups</h4>
-                                    <div class="code-block">
-# PostgreSQL backup
-docker exec postgres pg_dump -U username dbname > backup.sql
-
-# MySQL backup
-docker exec mysql mysqldump -u username -p dbname > backup.sql</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Troubleshooting -->
-                <section id="troubleshooting" class="mb-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Troubleshooting</h2>
+                    </section>
                     
-                    <div class="space-y-6">
-                        <div class="bg-white border rounded-lg p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">SSH Connection Issues</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <h4 class="font-semibold text-red-700 mb-2">Problem: Can't connect after installation</h4>
-                                    <div class="code-container">
-                                        <div class="code-block">
-<span class="code-line"># Check if SSH is running on custom port<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo systemctl status sshd<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo ss -tlnp | grep :2222<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
+                    <!-- Troubleshooting -->
+                    <section id="troubleshooting">
+                        <h2>Troubleshooting</h2>
+                        <h3>SSH Connection Refused</h3>
+                        <p>This is the most common issue after installation. It's almost always due to using the wrong port or an incorrect SSH key setup.</p>
+                        <div class="code-container">
+                            <pre class="code-block"><code class="text-gray-300"># Ensure you connect using the custom port (default is 2222)
+ssh -p 2222 your_user@your_server_ip
 
-<span class="code-line"># Check firewall<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo firewall-cmd --list-ports<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-
-<span class="code-line"># Connect with custom port<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">ssh -p 2222 username@server-ip<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-                                        </div>
-                                        <button class="copy-block-btn" onclick="copyBlock(this)">📋 Copy All</button>
-                                        <div class="copy-feedback">Copied!</div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-red-700 mb-2">Problem: Permission denied (publickey)</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1 ml-4">
-                                        <li>• Verify SSH key is in ~/.ssh/authorized_keys</li>
-                                        <li>• Check file permissions (600 for authorized_keys, 700 for .ssh/)</li>
-                                        <li>• Ensure SSH agent has your key loaded: ssh-add -l</li>
-                                        <li>• Try ssh with verbose output: ssh -vvv user@server</li>
-                                    </ul>
-                                </div>
-                            </div>
+# Use verbose mode to debug key issues
+ssh -vvv -p 2222 your_user@your_server_ip</code></pre>
+                            <button class="copy-btn">Copy</button>
                         </div>
-
-                        <div class="bg-white border rounded-lg p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Container Issues</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <h4 class="font-semibold text-red-700 mb-2">Problem: Container won't start</h4>
-                                    <div class="code-block mb-2">
-# Check container logs
-docker logs container-name
-
-# Check if port is already in use
-sudo netstat -tlnp | grep :8080
-
-# Check if image exists
-docker images
-
-# Try running interactively
-docker run -it image-name /bin/bash</div>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-red-700 mb-2">Problem: Containers can't communicate</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1 ml-4">
-                                        <li>• Ensure containers are on same network (npm)</li>
-                                        <li>• Use container names instead of localhost</li>
-                                        <li>• Check internal ports vs exposed ports</li>
-                                        <li>• Verify network: docker network inspect npm</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white border rounded-lg p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">SSL Certificate Issues</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <h4 class="font-semibold text-red-700 mb-2">Problem: Let's Encrypt validation fails</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1 ml-4">
-                                        <li>• Verify domain points to server IP: dig example.com</li>
-                                        <li>• Check if port 80 is accessible from internet</li>
-                                        <li>• Ensure no other service is using port 80</li>
-                                        <li>• Try DNS challenge instead of HTTP challenge</li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-red-700 mb-2">Problem: Certificate not auto-renewing</h4>
-                                    <div class="code-block">
-# Check Nginx Proxy Manager logs
-docker logs nginx-proxy-manager-app-1
-
-# Check certificate expiry in NPM interface
-# Certificates should auto-renew 30 days before expiry</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white border rounded-lg p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Performance Issues</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <h4 class="font-semibold text-red-700 mb-2">Problem: Server running out of disk space</h4>
-                                    <div class="code-block mb-2">
-# Check disk usage
-df -h
-
-# Check Docker disk usage
-docker system df
-
-# Clean up Docker
-docker system prune -a
-docker volume prune
-
-# Check log sizes
-sudo du -sh /var/log/*</div>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-red-700 mb-2">Problem: High memory usage</h4>
-                                    <div class="code-block">
-# Check memory usage
-free -h
-htop
-
-# Check container resource usage
-docker stats
-
-# Set memory limits in docker-compose.yml
-services:
-  app:
-    mem_limit: 512m</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Maintenance -->
-                <section id="maintenance" class="mb-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Maintenance</h2>
+                        
+                        <h3>502 Bad Gateway Error</h3>
+                        <p>This error from Nginx Proxy Manager means it can't reach your application container. Check these things:</p>
+                        <ul>
+                           <li>Is the container actually running? Check with `docker ps`.</li>
+                           <li>Is the container connected to the `npm` network? Verify with `docker network inspect npm`.</li>
+                           <li>Does the "Forward Hostname / IP" in Nginx Proxy Manager exactly match the container's name (e.g., `ghost`)?</li>
+                           <li>Is the port correct? (e.g., `2368` for Ghost).</li>
+                        </ul>
+                    </section>
                     
-                    <div class="space-y-6">
-                        <div class="bg-white border rounded-lg p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Regular Maintenance Tasks</h3>
-                            <div class="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <h4 class="font-semibold text-gray-700 mb-3">Weekly</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1">
-                                        <li>• Check disk space: df -h</li>
-                                        <li>• Review security logs: journalctl -u fail2ban</li>
-                                        <li>• Verify backups completed</li>
-                                        <li>• Check container health in Portainer</li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-700 mb-3">Monthly</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1">
-                                        <li>• Review ClamAV scan results</li>
-                                        <li>• Check for image updates in Portainer</li>
-                                        <li>• Clean up unused Docker resources</li>
-                                        <li>• Verify SSL certificate status</li>
-                                    </ul>
-                                </div>
-                            </div>
+                    <!-- Maintenance -->
+                    <section id="maintenance">
+                        <h2>Maintenance</h2>
+                        <h3>System Updates</h3>
+                        <p>Security updates are applied automatically. To run a full manual system upgrade, including non-security packages:</p>
+                         <div class="code-container">
+                            <pre class="code-block"><code class="text-gray-300">sudo dnf update -y</code></pre>
+                            <button class="copy-btn">Copy</button>
                         </div>
-
-                        <div class="bg-white border rounded-lg p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Update Procedures</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <h4 class="font-semibold text-gray-700 mb-2">System Updates (Automatic)</h4>
-                                    <p class="text-sm text-gray-600 mb-2">Security updates are automatically installed via dnf-automatic.</p>
-                                    <div class="code-block">
-# Check update status
-sudo systemctl status dnf-automatic.timer
-
-# Manual update check
-sudo dnf check-update
-
-# Manual update (if needed)
-sudo dnf update</div>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-700 mb-2">Container Updates</h4>
-                                    <div class="code-block">
-# In Portainer: Containers → Select container → Recreate
-# Or via CLI:
-docker pull image:latest
-docker stop container-name
-docker rm container-name
-docker run [same options] image:latest</div>
-                                </div>
-                            </div>
+                        
+                        <h3>Docker Cleanup</h3>
+                        <p>Periodically reclaim disk space from unused Docker images, containers, and volumes. This is safe to run and will not remove any volumes currently in use.</p>
+                        <div class="code-container">
+                            <pre class="code-block"><code class="text-gray-300"># Remove all unused containers, networks, images (both dangling and unreferenced)
+docker system prune -a --volumes</code></pre>
+                            <button class="copy-btn">Copy</button>
                         </div>
-
-                        <div class="bg-white border rounded-lg p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Monitoring Commands</h3>
-                            <div class="code-container">
-                                <div class="code-block">
-<span class="code-line"># System status<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">htop                              # Interactive process viewer<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">systemctl status firewalld       # Firewall status<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">systemctl status fail2ban        # Intrusion detection status<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">systemctl status docker          # Docker status<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-
-<span class="code-line"># Security logs<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo tail -f /var/log/secure      # SSH and authentication logs<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo journalctl -u fail2ban      # Fail2ban logs<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo grep "DENIED" /var/log/messages  # Firewall denials<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-
-<span class="code-line"># Docker monitoring<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">docker ps                        # Running containers<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">docker system df                 # Docker disk usage<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">docker logs container-name      # Container logs<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-
-<span class="code-line"># Network status<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo ss -tlnp                    # Open ports<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-<span class="code-line">sudo firewall-cmd --list-all     # Firewall rules<button class="copy-line-btn" onclick="copyLine(this)">📋</button></span>
-                                </div>
-                                <button class="copy-block-btn" onclick="copyBlock(this)">📋 Copy All</button>
-                                <div class="copy-feedback">Copied!</div>
-                            </div>
-                        </div>
-
-                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <p class="text-green-800 text-sm">
-                                <strong>Automation Note:</strong> Most security maintenance is automated by the script (updates, malware scans, log rotation). 
-                                Focus your manual maintenance on application-specific tasks and monitoring.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Footer -->
-                <footer class="border-t pt-8 mt-12">
-                    <div class="text-center text-gray-600">
-                        <p class="mb-2">Server Setup Script Documentation</p>
-                        <p class="text-sm">For issues and updates, check the <a href="https://gist.github.com/ronniebasak/1d6bb9c52b5d13d34f7fe4b396b7f202" class="text-blue-600 hover:underline" target="_blank">original script</a></p>
-                    </div>
-                </footer>
+                    </section>
+                </div>
             </main>
         </div>
     </div>
 
     <script>
-        // Copy individual line functionality
-        function copyLine(button) {
-            const line = button.parentElement;
-            const text = line.textContent.replace('📋', '').trim();
-            copyToClipboard(text);
-            showCopyFeedback(button);
-        }
+        mermaid.initialize({ startOnLoad: true, theme: 'default', 'fontFamily': "'Inter', sans-serif" });
 
-        // Copy entire code block functionality
-        function copyBlock(button) {
-            const codeBlock = button.parentElement.querySelector('.code-block');
-            const lines = codeBlock.querySelectorAll('.code-line');
-            const text = Array.from(lines).map(line => 
-                line.textContent.replace('📋', '').trim()
-            ).join('\n');
-            copyToClipboard(text);
-            showCopyFeedback(button);
-        }
+        // --- Copy Button Logic ---
+        const allCopyButtons = document.querySelectorAll('.copy-btn');
+        allCopyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const codeBlock = button.previousElementSibling;
+                const textToCopy = codeBlock.innerText;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const feedback = document.getElementById('copy-feedback-container');
+                    feedback.classList.add('show');
+                    setTimeout(() => {
+                        feedback.classList.remove('show');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+            });
+        });
 
-        // Copy text to clipboard
-        async function copyToClipboard(text) {
-            try {
-                await navigator.clipboard.writeText(text);
-            } catch (err) {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-            }
-        }
-
-        // Show copy feedback
-        function showCopyFeedback(button) {
-            const container = button.closest('.code-container');
-            const feedback = container.querySelector('.copy-feedback');
-            feedback.classList.add('show');
-            setTimeout(() => {
-                feedback.classList.remove('show');
-            }, 1500);
-        }
-
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
+        // --- Active Nav Link Highlighting ---
+        const sections = document.querySelectorAll('main section');
+        const navLinks = document.querySelectorAll('#sidebar-nav .nav-link');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        const href = link.getAttribute('href');
+                        link.classList.toggle('active', href === `#${entry.target.id}`);
                     });
                 }
             });
+        }, { rootMargin: "-40% 0px -60% 0px" });
+
+        sections.forEach(section => {
+            observer.observe(section);
         });
 
-        // Highlight active section in navigation
-        window.addEventListener('scroll', () => {
-            const sections = document.querySelectorAll('section[id]');
-            const navLinks = document.querySelectorAll('a[href^="#"]');
-            
-            let current = '';
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                const sectionHeight = section.clientHeight;
-                if (scrollY >= sectionTop - 100) {
-                    current = section.getAttribute('id');
-                }
-            });
-
-            navLinks.forEach(link => {
-                link.classList.remove('bg-blue-100', 'text-blue-700');
-                if (link.getAttribute('href') === `#${current}`) {
-                    link.classList.add('bg-blue-100', 'text-blue-700');
-                }
-            });
-        });
     </script>
 </body>
 </html>
